@@ -61,7 +61,7 @@ void tsp(int depth, int current_length, int *path)
         me = path[depth - 1]; // A cidade atual (a última cidade no caminho)
                               // Itera sobre todas as cidades para decidir qual será a próxima a ser visitada.
 
-#pragma omp parallel for schedule(guided) num_threads(8) private(i, town, dist)
+#pragma omp parallel for schedule(dynamic) num_threads(8) private(i, town, dist)
         for (i = 0; i < nb_towns; i++)
         {
             int *path_copy = (int *)malloc(sizeof(int) * nb_towns); // Cria uma cópia local do caminho
