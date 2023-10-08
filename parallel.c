@@ -42,6 +42,10 @@ void tsp(int depth, int current_length, int *path)
     int me;
     int town, dist;
     int local_min_distance = INT_MAX; // Cada thread tem sua própria cópia
+    int local_path[MAX_TOWNS];        // Cada thread tem sua própria cópia do caminho
+
+    // Copie o caminho atual para a matriz local
+    memcpy(local_path, path, sizeof(int) * nb_towns);
 
     // ignorar caminhos cujo comprimento total já é maior do que a menor distância encontrada até agora.
     if (current_length >= min_distance)
@@ -50,7 +54,7 @@ void tsp(int depth, int current_length, int *path)
     // se já visitou todas as cidades
     if (depth == nb_towns)
     {
-        current_length += dist_to_origin[path[nb_towns - 1]];
+        current_length += dist_to_origin[local_path[nb_towns - 1]];
 
         if (current_length < local_min_distance)
             local_min_distance = current_length;
@@ -58,29 +62,30 @@ void tsp(int depth, int current_length, int *path)
     // ainda há cidades
     else
     {
-        me = path[depth - 1];
+        me = local_path[depth - 1];
 
 // Use #pragma omp parallel for para paralelizar o loop
-#pragma omp parallel for private(town, dist) shared(path) reduction(min : local_min_distance)
+#pragma omp parallel for private(town, dist) shared(local_path) reduction(min : local_min_distance)
         for (i = 0; i < nb_towns; i++)
         {
             town = d_matrix[me][i].to_town;
 
-            if (!present(town, depth, path))
+            if (!present(town, depth, local_path))
             {
-                int newPath[MAX_TOWNS]; // Crie uma cópia local de path
-                memcpy(newPath, path, sizeof(int) * nb_towns);
-                newPath[depth] = town;
+                local_path[depth] = town;
                 dist = d_matrix[me][i].dist;
-                tsp(depth + 1, current_length + dist, newPath);
+                tsp(depth + 1, current_length + dist, local_path);
             }
         }
     }
 
-// Encontre o mínimo entre as cópias locais
-#pragma omp critical
+    // Encontre o mínimo entre as cópias locais
     if (local_min_distance < min_distance)
-        min_distance = local_min_distance;
+    {
+#pragma omp critical
+        if (local_min_distance < min_distance)
+            min_distance = local_min_distance;
+    }
 }
 
 void greedy_shortest_first_heuristic(int *x, int *y)
