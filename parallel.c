@@ -61,7 +61,7 @@ void tsp(int depth, int current_length, int *path)
         me = path[depth - 1]; // A cidade atual (a última cidade no caminho)
                               // Itera sobre todas as cidades para decidir qual será a próxima a ser visitada.
 
-#pragma omp parallel for schedule(dynamic) num_threads(8) private(i, town, dist)
+#pragma omp parallel for schedule(dynamic) private(i, town, dist)
         for (i = 0; i < nb_towns; i++)
         {
             int *path_copy = (int *)malloc(sizeof(int) * nb_towns); // Cria uma cópia local do caminho
@@ -162,6 +162,15 @@ int run_tsp()
     int i, *path;
 
     init_tsp();
+
+    // Determine o número de núcleos de CPU disponíveis
+    int num_procs = omp_get_num_procs();
+
+    // Defina o número de threads OpenMP a serem usadas (pode ajustar isso conforme necessário)
+    int num_threads = num_procs;
+
+    // Configura o número de threads OpenMP
+    omp_set_num_threads(num_threads);
 
     path = (int *)malloc(sizeof(int) * nb_towns);
     path[0] = 0;
