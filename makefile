@@ -1,16 +1,16 @@
 FLAGS=-O3 -lm
 CC=gcc
 
-nomePrograma=seq
+nomePrograma=par
 
 
 all: $(nomePrograma)
 
-$(nomePrograma): tsp.o
-	$(CC) -o $(nomePrograma) tsp.o $(FLAGS)
+$(nomePrograma): parallel.o
+	$(CC) -o $(nomePrograma) parallel.o $(FLAGS)
 
-tsp.o: tsp.c
-	$(CC) -c tsp.c $(FLAGS)
+parallel.o: parallel.c
+	$(CC) -c parallel.c $(FLAGS)
 
 clean:
 	rm -f *.o *.gch $(nomePrograma)
