@@ -1,4 +1,4 @@
-FLAGS=-O3 -lm
+FLAGS=-O3 -lm -fopenmp
 CC=gcc
 
 nomePrograma=par

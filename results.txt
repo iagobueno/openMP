@@ -1,0 +1,14 @@
+Sequencial
+745
+571
+
+real	1m15.027s
+user	1m14.941s
+sys	0m0.000s
+Paralelo
+745
+571
+
+real	3m55.937s
+user	7m51.230s
+sys	2m48.081s

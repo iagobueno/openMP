@@ -8,14 +8,13 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
-#include <omp.h>
 #include <string.h>
-#define MAX_TOWNS 20
+#include <omp.h>
 
-int min_distance; // menor distancia global
+int min_distance;
 int nb_towns;
 
-// armazena informações sobre destinos das cidades e suas distâncias.
+// armazena informações sobre destinos das czzidades e suas distâncias.
 typedef struct
 {
     int to_town;
@@ -38,53 +37,48 @@ int present(int town, int depth, int *path)
 // Ela explora recursivamente todas as possíveis rotas, mas faz algumas podas
 void tsp(int depth, int current_length, int *path)
 {
-    int i;
-    int me;
-    int town, dist;
-    int local_min_distance = INT_MAX; // Cada thread tem sua própria cópia
-    int local_path[MAX_TOWNS];        // Cada thread tem sua própria cópia do caminho
-
-    // Copie o caminho atual para a matriz local
-    memcpy(local_path, path, sizeof(int) * nb_towns);
-
-    // ignorar caminhos cujo comprimento total já é maior do que a menor distância encontrada até agora.
+    // Ignora caminhos cujo comprimento total já é maior do que a menor distância encontrada até agora.
     if (current_length >= min_distance)
         return;
 
-    // se já visitou todas as cidades
+    int i;
+
+    // Se já visitou todas as cidades
     if (depth == nb_towns)
     {
-        current_length += dist_to_origin[local_path[nb_towns - 1]];
-
-        if (current_length < local_min_distance)
-            local_min_distance = current_length;
-    }
-    // ainda há cidades
-    else
-    {
-        me = local_path[depth - 1];
-
-// Use #pragma omp parallel for para paralelizar o loop
-#pragma omp parallel for private(town, dist) shared(local_path) reduction(min : local_min_distance)
-        for (i = 0; i < nb_towns; i++)
+        // O caminho atual é atualizado somando a distância da última cidade de volta à cidade de origem
+        current_length += dist_to_origin[path[nb_towns - 1]];
+        // Se o comprimento atual for menor que a menor encontrada, atualiza
+        if (current_length < min_distance)
+#pragma omp critical
         {
-            town = d_matrix[me][i].to_town;
-
-            if (!present(town, depth, local_path))
-            {
-                local_path[depth] = town;
-                dist = d_matrix[me][i].dist;
-                tsp(depth + 1, current_length + dist, local_path);
-            }
+            min_distance = current_length;
         }
     }
-
-    // Encontre o mínimo entre as cópias locais
-    if (local_min_distance < min_distance)
+    else
     {
-#pragma omp critical
-        if (local_min_distance < min_distance)
-            min_distance = local_min_distance;
+        int town, me, dist;
+        me = path[depth - 1]; // A cidade atual (a última cidade no caminho)
+                              // Itera sobre todas as cidades para decidir qual será a próxima a ser visitada.
+
+#pragma omp parallel for schedule(guided) num_threads(8) private(i, town, dist)
+        for (i = 0; i < nb_towns; i++)
+        {
+            int *path_copy = (int *)malloc(sizeof(int) * nb_towns); // Cria uma cópia local do caminho
+            memcpy(path_copy, path, sizeof(int) * nb_towns);
+
+            town = d_matrix[me][i].to_town; // Próxima cidade candidata
+            // Verifica se a cidade candidata ainda não foi visitada.
+            if (!present(town, depth, path_copy))
+            {
+                path_copy[depth] = town;     // Adiciona a cidade candidata ao caminho.
+                dist = d_matrix[me][i].dist; // Distância da cidade atual à cidade candidata.
+                // Chama recursivamente a função tsp para a próxima cidade candidata.
+                tsp(depth + 1, current_length + dist, path_copy);
+            }
+
+            free(path_copy); // Libera a cópia local do caminho
+        }
     }
 }
 

@@ -12,7 +12,7 @@
 int min_distance;
 int nb_towns;
 
-// armazena informações sobre destinos das cidades e suas distâncias.
+// armazena informações sobre destinos das czzidades e suas distâncias.
 typedef struct
 {
     int to_town;
@@ -43,6 +43,7 @@ void tsp(int depth, int current_length, int *path)
     // se já visitou todas as cidades
     if (depth == nb_towns)
     {
+        // o caminho atual é atualizado somando a distância da última cidade de volta à cidade de origem
         current_length += dist_to_origin[path[nb_towns - 1]];
         // se o comprimento atual for menor que a menor encontrada, atualiza
         if (current_length < min_distance)
