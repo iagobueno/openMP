@@ -2,9 +2,14 @@ Sequencial
 
 745
 
-real	0m36.745s
-user	0m36.663s
-sys	0m0.003s
+real	0m36.818s
+user	0m36.752s
+sys	0m0.000s
 
 Paralelo
 
+745
+
+real	0m43.029s
+user	3m53.350s
+sys	1m18.180s
